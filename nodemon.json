@@ -1,0 +1,5 @@
+{
+    "ignore": ["dist/*", "node_modules/*"],
+    "watch": ["src/*", "build.js"],
+    "ext": "js,json,md,html,css"
+} 

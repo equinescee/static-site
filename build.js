@@ -4,7 +4,7 @@ const { marked } = require('marked');
 const matter = require('gray-matter');
 
 // HTML template for wrapping Markdown content
-const template = (metadata, content) => `
+const template = (metadata, content, relativePath = '.') => `
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -12,16 +12,16 @@ const template = (metadata, content) => `
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>${metadata.title || 'Untitled'} - My Website</title>
     <meta name="description" content="${metadata.description || ''}">
-    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="${relativePath}/css/style.css">
 </head>
 <body>
     <header>
         <nav>
             <ul>
-                <li><a href="/index.html">Home</a></li>
-                <li><a href="/blog/index.html">Blog</a></li>
-                <li><a href="/about.html">About</a></li>
-                <li><a href="/faq.html">FAQ</a></li>
+                <li><a href="${relativePath}/index.html">Home</a></li>
+                <li><a href="${relativePath}/blog/index.html">Blog</a></li>
+                <li><a href="${relativePath}/about.html">About</a></li>
+                <li><a href="${relativePath}/faq.html">FAQ</a></li>
             </ul>
         </nav>
     </header>
@@ -41,7 +41,7 @@ const template = (metadata, content) => `
         <p>&copy; 2024 My Website. All rights reserved.</p>
     </footer>
 
-    <script src="/js/main.js"></script>
+    <script src="${relativePath}/js/main.js"></script>
 </body>
 </html>
 `;
@@ -60,7 +60,10 @@ async function processMarkdown(filePath) {
         }
     }
     
-    return template(data, html);
+    // Calculate relative path to root
+    const relativePath = path.relative(path.dirname(filePath), 'src/content').replace(/^\.\.\//, '') || '.';
+    
+    return template(data, html, relativePath);
 }
 
 // Process all markdown files recursively
@@ -93,26 +96,37 @@ async function processDirectory(dir) {
 
 // Copy static assets to dist
 async function copyStaticAssets() {
-    // Copy CSS
-    await fs.copy('src/css', 'dist/css');
-    // Copy JS
-    await fs.copy('src/js', 'dist/js');
-    // Copy index.html if it exists in src
+    // Only copy if source directories exist
+    if (await fs.pathExists('src/css')) {
+        await fs.copy('src/css', 'dist/css', { overwrite: true });
+    }
+    if (await fs.pathExists('src/js')) {
+        await fs.copy('src/js', 'dist/js', { overwrite: true });
+    }
     if (await fs.pathExists('src/index.html')) {
-        await fs.copy('src/index.html', 'dist/index.html');
+        await fs.copy('src/index.html', 'dist/index.html', { overwrite: true });
     }
 }
 
 // Clean dist directory
 async function cleanDist() {
-    await fs.remove('dist');
-    await fs.ensureDir('dist');
+    // Only remove HTML files and keep static assets
+    const entries = await fs.readdir('dist', { withFileTypes: true });
+    for (const entry of entries) {
+        const fullPath = path.join('dist', entry.name);
+        if (entry.isFile() && entry.name.endsWith('.html')) {
+            await fs.remove(fullPath);
+        }
+    }
 }
 
 // Main build function
 async function build() {
     try {
-        // Clean and create dist directory
+        // Ensure dist directory exists
+        await fs.ensureDir('dist');
+        
+        // Clean only HTML files
         await cleanDist();
 
         // Create necessary source directories if they don't exist
@@ -124,7 +138,7 @@ async function build() {
         // Process all content
         await processDirectory('src/content');
         
-        // Copy static assets
+        // Copy static assets with overwrite
         await copyStaticAssets();
 
         console.log('Build completed successfully!');
