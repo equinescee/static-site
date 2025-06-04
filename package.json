@@ -1,0 +1,18 @@
+{
+  "name": "static-site",
+  "version": "1.0.0",
+  "description": "Simple static site with Markdown support",
+  "main": "build.js",
+  "scripts": {
+    "build": "node build.js",
+    "dev": "nodemon build.js & http-server ./dist -c-1"
+  },
+  "dependencies": {
+    "marked": "^11.1.0",
+    "fs-extra": "^11.2.0",
+    "gray-matter": "^4.0.3"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.10"
+  }
+}
