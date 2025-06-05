@@ -6,6 +6,9 @@ const matter = require('gray-matter');
 // Add this near the top of build.js with other requires
 const partials = {};
 
+// Add this at the top with other constants
+const BASE_URL = '/static-site';
+
 // Add this function to load partials
 async function loadPartials() {
     const partialsDir = 'src/templates/partials';
@@ -44,7 +47,7 @@ const template = (metadata, content, relativePath = '.') => `
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>${metadata.title || 'Untitled'} - CompanyName</title>
     <meta name="description" content="${metadata.description || ''}">
-    <link rel="stylesheet" href="${relativePath}/css/style.css">
+    <link rel="stylesheet" href="${BASE_URL}${relativePath}/css/style.css">
 </head>
 <body>
     ${includePartial('header')}
@@ -96,8 +99,8 @@ async function processMarkdown(filePath) {
         // Replace all metadata variables
         const metadata = {
             ...data,
-            url: `/${path.relative('src/content', filePath).replace('.md', '.html')}`,
-            relativePath
+            url: `${BASE_URL}/${path.relative('src/content', filePath).replace('.md', '.html')}`,
+            relativePath: BASE_URL + '/' + relativePath
         };
         
         // First replace complex date and author template strings
@@ -134,8 +137,8 @@ async function processMarkdown(filePath) {
         // For regular pages like about
         const metadata = {
             ...data,
-            url: `/${path.basename(filePath).replace('.md', '.html')}`,
-            relativePath
+            url: `${BASE_URL}/${path.basename(filePath).replace('.md', '.html')}`,
+            relativePath: BASE_URL + '/' + relativePath
         };
         
         // Modified template for about page with proper article structure
@@ -147,7 +150,7 @@ async function processMarkdown(filePath) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>${metadata.title || 'Untitled'} - CompanyName</title>
     <meta name="description" content="${metadata.description || ''}">
-    <link rel="stylesheet" href="${relativePath}/css/style.css">
+    <link rel="stylesheet" href="${BASE_URL}${relativePath}/css/style.css">
 </head>
 <body>
     ${includePartial('header')}
@@ -253,10 +256,11 @@ async function generateBlogIndex() {
         if (file.endsWith('.md')) {
             const content = await fs.readFile(path.join(blogDir, file), 'utf-8');
             const { data } = matter(content);
+            const url = `${BASE_URL}/${file.replace('.md', '.html')}`;
             posts.push({
                 title: data.title,
                 date: data.date,
-                url: file.replace('.md', '.html')
+                url: url
             });
         }
     }
