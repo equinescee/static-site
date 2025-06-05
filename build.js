@@ -3,6 +3,38 @@ const path = require('path');
 const { marked } = require('marked');
 const matter = require('gray-matter');
 
+// Add this near the top of build.js with other requires
+const partials = {};
+
+// Add this function to load partials
+async function loadPartials() {
+    const partialsDir = 'src/templates/partials';
+    if (await fs.pathExists(partialsDir)) {
+        const files = await fs.readdir(partialsDir);
+        for (const file of files) {
+            if (file.endsWith('.html')) {
+                const name = path.basename(file, '.html');
+                const content = await fs.readFile(path.join(partialsDir, file), 'utf-8');
+                partials[name] = content;
+            }
+        }
+    }
+}
+
+// Add this helper function
+function includePartial(name, data = {}) {
+    if (!partials[name]) {
+        console.warn(`Warning: Partial '${name}' not found`);
+        return '';
+    }
+    let content = partials[name];
+    // Replace variables in the partial
+    Object.entries(data).forEach(([key, value]) => {
+        content = content.replace(new RegExp(`\\$\\{${key}\\}`, 'g'), value);
+    });
+    return content;
+}
+
 // HTML template for wrapping Markdown content
 const template = (metadata, content, relativePath = '.') => `
 <!DOCTYPE html>
@@ -10,21 +42,13 @@ const template = (metadata, content, relativePath = '.') => `
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>${metadata.title || 'Untitled'} - My Website</title>
+    <title>${metadata.title || 'Untitled'} - CompanyName</title>
     <meta name="description" content="${metadata.description || ''}">
     <link rel="stylesheet" href="${relativePath}/css/style.css">
 </head>
 <body>
-    <header>
-        <nav>
-            <ul>
-                <li><a href="${relativePath}/index.html">Home</a></li>
-                <li><a href="${relativePath}/blog/index.html">Blog</a></li>
-                <li><a href="${relativePath}/about.html">About</a></li>
-            </ul>
-        </nav>
-    </header>
-
+    ${includePartial('header')}
+    
     <main>
         <article>
             <header>
@@ -33,17 +57,14 @@ const template = (metadata, content, relativePath = '.') => `
                 ${metadata.author ? `<p class="author">By ${metadata.author}</p>` : ''}
             </header>
             ${content}
+            ${includePartial('convertkit')}
+            ${metadata.url ? includePartial('social-share', { url: metadata.url, title: metadata.title }) : ''}
         </article>
     </main>
 
-    <footer>
-        <p>&copy; 2024 My Website. All rights reserved.</p>
-    </footer>
-
-    <script src="${relativePath}/js/main.js"></script>
+    ${includePartial('footer')}
 </body>
-</html>
-`;
+</html>`;
 
 // Add this at the top with other requires
 const blogTemplate = fs.readFileSync('src/templates/blog.html', 'utf-8');
@@ -52,35 +73,103 @@ const blogTemplate = fs.readFileSync('src/templates/blog.html', 'utf-8');
 async function processMarkdown(filePath) {
     const source = await fs.readFile(filePath, 'utf-8');
     const { data, content } = matter(source);
+    
+    // Configure marked for proper heading rendering
+    marked.setOptions({
+        headerIds: true,
+        gfm: true
+    });
+    
     const html = marked(content);
     
-    // If no title in front matter, try to extract from content
-    if (!data.title) {
-        const firstHeading = content.split('\n').find(line => line.startsWith('# '));
-        if (firstHeading) {
-            data.title = firstHeading.replace('# ', '').trim();
-        }
-    }
-    
     // Calculate relative path to root
-    const relativePath = path.relative(path.dirname(filePath), 'src/content').replace(/^\.\.\//, '') || '.';
+    const relativePath = path.relative(path.dirname(filePath), 'src').replace(/^\.\.\//, '') || '.';
     
     // Use blog template for blog posts, default template for others
     if (filePath.includes('blog/')) {
-        return blogTemplate
-            .replace('${metadata.title}', data.title || 'Untitled')
-            .replace('${metadata.description || \'\'}', data.description || '')
-            .replace('${relativePath}', relativePath)
-            .replace('${content}', html)
-            .replace('${metadata.date ? `<time datetime="${metadata.date}">${new Date(metadata.date).toLocaleDateString()}</time>` : \'\'}',
-                data.date ? `<time datetime="${data.date}">${new Date(data.date).toLocaleDateString()}</time>` : '')
-            .replace('${metadata.author ? `<span class="author">By ${metadata.author}</span>` : \'\'}',
-                data.author ? `<span class="author">By ${data.author}</span>` : '')
-            .replace('${metadata.tags ? `<div class="tags">${metadata.tags.map(tag => `<span class="tag">${tag}</span>`).join(\'\')}</div>` : \'\'}',
-                data.tags ? `<div class="tags">${data.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}</div>` : '');
-    }
+        let blogContent = blogTemplate;
+        
+        // Format the date and author
+        const formattedDate = data.date ? new Date(data.date).toLocaleDateString() : '';
+        const formattedAuthor = data.author ? `<span class="author">By ${data.author}</span>` : '';
+        
+        // Replace all metadata variables
+        const metadata = {
+            ...data,
+            url: `/${path.relative('src/content', filePath).replace('.md', '.html')}`,
+            relativePath
+        };
+        
+        // First replace complex date and author template strings
+        blogContent = blogContent
+            .replace(
+                '${metadata.date ? `<time datetime="${metadata.date}">${new Date(metadata.date).toLocaleDateString()}</time>` : \'\'}',
+                formattedDate ? `<time datetime="${data.date}">${formattedDate}</time>` : ''
+            )
+            .replace(
+                '${metadata.author ? `<span class="author">By ${metadata.author}</span>` : \'\'}',
+                formattedAuthor
+            );
+        
+        // Then replace tags template string
+        blogContent = blogContent.replace(
+            '${metadata.tags ? `<div class="tags">${metadata.tags.map(tag => `<span class="tag">${tag}</span>`).join(\'\')}</div>` : \'\'}',
+            metadata.tags ? `<div class="tags">${metadata.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}</div>` : ''
+        );
+        
+        // Then replace other metadata fields
+        blogContent = blogContent
+            .replace(/\$\{metadata\.([^}]+)\}/g, (match, key) => {
+                const value = key.split('.').reduce((obj, k) => obj && obj[k], metadata);
+                return value || '';
+            })
+            .replace(/\$\{relativePath\}/g, relativePath)
+            .replace(/\$\{content\}/g, html)
+            .replace(/\$\{include\('([^']+)'\)}/g, (match, partialName) => {
+                return includePartial(partialName.replace('.html', ''), metadata);
+            });
+            
+        return blogContent;
+    } else {
+        // For regular pages like about
+        const metadata = {
+            ...data,
+            url: `/${path.basename(filePath).replace('.md', '.html')}`,
+            relativePath
+        };
+        
+        // Modified template for about page with proper article structure
+        const pageTemplate = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${metadata.title || 'Untitled'} - CompanyName</title>
+    <meta name="description" content="${metadata.description || ''}">
+    <link rel="stylesheet" href="${relativePath}/css/style.css">
+</head>
+<body>
+    ${includePartial('header')}
     
-    return template(data, html, relativePath);
+    <main class="about-page">
+        <article class="about-content">
+            <h1>${metadata.title || 'Untitled'}</h1>
+            <div class="about-body">
+                ${html}
+            </div>
+            <div class="signup-section-wrapper">
+                ${includePartial('convertkit')}
+            </div>
+        </article>
+    </main>
+
+    ${includePartial('footer')}
+</body>
+</html>`;
+        
+        return pageTemplate;
+    }
 }
 
 // Process all markdown files recursively
@@ -97,29 +186,39 @@ async function processDirectory(dir) {
             // Process markdown files
             const content = await processMarkdown(fullPath);
             
-            // Calculate output path maintaining directory structure
-            const relativePath = path.relative('src/content', fullPath);
-            const outputPath = path.join('dist', relativePath.replace('.md', '.html'));
+            // Special handling for about.md
+            const outputPath = fullPath.includes('about.md') 
+                ? path.join('dist', 'about.html')  // Put about.html directly in dist
+                : path.join('dist', path.relative('src/content', fullPath).replace('.md', '.html'));
             
             // Ensure output directory exists
             await fs.ensureDir(path.dirname(outputPath));
             
             // Write the file
             await fs.writeFile(outputPath, content);
-            console.log(`Processed: ${relativePath}`);
+            console.log(`Processed: ${path.relative('src/content', fullPath)}`);
         }
     }
 }
 
 // Copy static assets to dist
 async function copyStaticAssets() {
-    // Only copy if source directories exist
+    // Ensure dist directory exists
+    await fs.ensureDir('dist');
+    
+    // Copy CSS
     if (await fs.pathExists('src/css')) {
-        await fs.copy('src/css', 'dist/css', { overwrite: true });
+        await fs.ensureDir('dist/css');
+        await fs.copy('src/css', 'dist/css');
     }
+    
+    // Copy JS
     if (await fs.pathExists('src/js')) {
+        await fs.ensureDir('dist/js');
         await fs.copy('src/js', 'dist/js', { overwrite: true });
     }
+    
+    // Copy index.html
     if (await fs.pathExists('src/index.html')) {
         await fs.copy('src/index.html', 'dist/index.html', { overwrite: true });
     }
@@ -127,12 +226,17 @@ async function copyStaticAssets() {
 
 // Clean dist directory
 async function cleanDist() {
-    // Only remove HTML files and keep static assets
-    const entries = await fs.readdir('dist', { withFileTypes: true });
-    for (const entry of entries) {
-        const fullPath = path.join('dist', entry.name);
-        if (entry.isFile() && entry.name.endsWith('.html')) {
-            await fs.remove(fullPath);
+    // Create dist directory if it doesn't exist
+    await fs.ensureDir('dist');
+    
+    // Only try to remove files that exist
+    if (await fs.pathExists('dist')) {
+        const entries = await fs.readdir('dist', { withFileTypes: true });
+        for (const entry of entries) {
+            const fullPath = path.join('dist', entry.name);
+            if (entry.isFile() && entry.name.endsWith('.html')) {
+                await fs.remove(fullPath);
+            }
         }
     }
 }
@@ -163,22 +267,22 @@ async function generateBlogIndex() {
     // Generate HTML for each post
     const postsHtml = posts.map(post => `
         <article class="post-card">
-            <div class="post-card-content">
-                <h2 class="post-title">
-                    <a href="${post.url}">${post.title}</a>
-                </h2>
-                ${post.date ? `
-                    <div class="post-meta">
-                        <time datetime="${post.date}">${new Date(post.date).toLocaleDateString()}</time>
+            <a href="${post.url}" class="post-card-link">
+                <div class="post-card-content">
+                    <h2 class="post-title">${post.title}</h2>
+                    ${post.date ? `
+                        <div class="post-meta">
+                            <time datetime="${post.date}">${new Date(post.date).toLocaleDateString()}</time>
+                        </div>
+                    ` : ''}
+                    ${post.description ? `
+                        <p class="post-excerpt">${post.description}</p>
+                    ` : ''}
+                    <div class="post-link">
+                        <span class="read-more">Read More →</span>
                     </div>
-                ` : ''}
-                ${post.description ? `
-                    <p class="post-excerpt">${post.description}</p>
-                ` : ''}
-                <div class="post-link">
-                    <a href="${post.url}" class="read-more">Read More →</a>
                 </div>
-            </div>
+            </a>
         </article>
     `).join('\n');
     
@@ -193,29 +297,20 @@ async function generateBlogIndex() {
 // Main build function
 async function build() {
     try {
-        // Ensure dist directory exists
-        await fs.ensureDir('dist');
+        // Load partials first
+        await loadPartials();
         
-        // Clean only HTML files
+        // Then proceed with the rest of the build
         await cleanDist();
-
-        // Create necessary source directories if they don't exist
-        await fs.ensureDir('src/content');
-        await fs.ensureDir('src/content/blog');
-        await fs.ensureDir('src/css');
-        await fs.ensureDir('src/js');
-
-        // Process all content
+        await copyStaticAssets();
         await processDirectory('src/content');
         await generateBlogIndex();
-        
-        // Copy static assets with overwrite
-        await copyStaticAssets();
-
         console.log('Build completed successfully!');
     } catch (error) {
         console.error('Build failed:', error);
+        throw error;
     }
 }
 
+// Start the build
 build(); 

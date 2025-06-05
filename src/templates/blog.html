@@ -10,7 +10,9 @@
 <body>
     <header>
         <nav class="navbar">
-            <div class="logo">CompanyName</div>
+            <div class="logo">
+                <a href="/">CompanyName</a>
+            </div>
             <div class="nav-links">
                 <a href="/">Home</a>
                 <a href="/about.html">About</a>
@@ -32,6 +34,8 @@
             <div class="post-content">
                 ${content}
             </div>
+            ${include('convertkit')}
+            ${include('social-share')}
         </article>
     </main>
 

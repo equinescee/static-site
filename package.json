@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "nodemon build.js & http-server ./dist -c-1",
+    "dev": "nodemon build.js",
     "build": "node build.js"
   },
   "keywords": [],

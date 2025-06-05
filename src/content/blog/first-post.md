@@ -6,8 +6,6 @@ date: 2024-03-21
 tags: [project, updates, features]
 ---
 
-# Project Update: New Features
-
 We've made several improvements to our project:
 
 ## 1. Improved Navigation

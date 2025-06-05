@@ -16,6 +16,7 @@ body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
     line-height: 1.5;
     color: var(--text-color);
+    text-align: left;
 }
 
 /* Navbar */
@@ -36,6 +37,17 @@ body {
     font-size: 1.5rem;
     font-weight: bold;
     color: var(--primary-color);
+}
+
+.logo a {
+    text-decoration: none;
+    color: var(--primary-color);
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+.logo a:hover {
+    color: var(--secondary-color);
 }
 
 .nav-links a {
@@ -150,21 +162,36 @@ button:hover {
     margin: 0 auto;
 }
 
+/* Product Card Styles */
 .product-card {
+    display: block;
+    text-decoration: none;
+    color: inherit;
     background: white;
-    border-radius: 20px;
+    border-radius: 12px;
     overflow: hidden;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-    transition: transform 0.3s;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .product-card:hover {
-    transform: translateY(-10px);
+    transform: translateY(-4px);
+    box-shadow: 0 8px 12px rgba(0, 0, 0, 0.15);
+}
+
+.product-image {
+    width: 100%;
+    padding-top: 60%;
+    position: relative;
+    background: var(--background-light);
 }
 
 .placeholder-image {
-    height: 250px;
-    background: var(--background-light);
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -173,7 +200,7 @@ button:hover {
 }
 
 .product-info {
-    padding: 2rem;
+    padding: 1.5rem;
 }
 
 .product-info h3 {
@@ -185,26 +212,23 @@ button:hover {
 .product-info p {
     color: #64748b;
     margin-bottom: 1.5rem;
+    line-height: 1.6;
 }
 
 .price {
-    font-size: 1.25rem;
-    color: var(--primary-color);
     font-weight: 600;
-    margin: 1rem 0;
+    color: var(--primary-color);
+    margin-bottom: 1rem;
 }
 
 .learn-more {
+    display: inline-block;
     color: var(--primary-color);
-    text-decoration: none;
-    font-weight: 600;
-    display: inline-flex;
-    align-items: center;
-    transition: transform 0.2s;
+    font-weight: 500;
 }
 
-.learn-more:hover {
-    transform: translateX(5px);
+.product-card:hover .learn-more {
+    color: var(--secondary-color);
 }
 
 /* Footer */
@@ -341,16 +365,24 @@ footer {
     padding: 8rem 2rem 4rem;
     max-width: 800px;
     margin: 0 auto;
+    text-align: left;
 }
 
 .post-header {
-    text-align: center;
-    margin-bottom: 3rem;
+    text-align: left;
+    margin-bottom: 2rem;
+}
+
+.post-header h1 {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+    line-height: 1.3;
 }
 
 .post-meta {
     color: #64748b;
     margin: 1rem 0;
+    text-align: left;
 }
 
 .post-meta time {
@@ -359,6 +391,8 @@ footer {
 
 .tags {
     margin: 1rem 0;
+    text-align: left;
+    padding-left: 0;
 }
 
 .tag {
@@ -368,11 +402,16 @@ footer {
     border-radius: 999px;
     font-size: 0.875rem;
     color: #64748b;
-    margin: 0.25rem;
+    margin: 0.25rem 0.25rem 0.25rem 0;
+}
+
+.tag:first-child {
+    margin-left: 0;
 }
 
 .post-content {
     line-height: 1.8;
+    text-align: left;
 }
 
 .post-content h2 {
@@ -398,13 +437,14 @@ footer {
     padding: 8rem 2rem 4rem;
     max-width: 1200px;
     margin: 0 auto;
+    text-align: left;
 }
 
 .blog-index h1 {
-    font-size: 2.5rem;
+    font-size: 2rem;
     color: var(--text-color);
-    margin-bottom: 3rem;
-    text-align: center;
+    margin-bottom: 2rem;
+    text-align: left;
 }
 
 /* Post Grid Layout */
@@ -428,14 +468,21 @@ footer {
     box-shadow: 0 8px 12px rgba(0, 0, 0, 0.15);
 }
 
+.post-card-link {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+}
+
 .post-card-content {
     padding: 1.5rem;
 }
 
 .post-title {
-    font-size: 1.5rem;
+    font-size: 1.25rem;
     margin: 0 0 1rem 0;
     line-height: 1.3;
+    text-align: left;
 }
 
 .post-title a {
@@ -451,6 +498,7 @@ footer {
     font-size: 0.9rem;
     color: #666;
     margin-bottom: 1rem;
+    text-align: left;
 }
 
 .post-excerpt {
@@ -600,4 +648,120 @@ footer {
 
 .share-button.facebook {
     background: #1877F2;
+}
+
+/* Remove underline from post title when card is linked */
+.post-card-link .post-title {
+    color: var(--text-color);
+    text-decoration: none;
+}
+
+/* Style the read more link within the card */
+.post-card-link .read-more {
+    color: var(--primary-color);
+    font-weight: 500;
+}
+
+.post-card:hover .read-more {
+    color: var(--secondary-color);
+}
+
+/* About Page */
+.about-page {
+    padding: 8rem 2rem 4rem;
+    text-align: left;
+}
+
+.about-content {
+    max-width: 800px;
+    margin: 0 auto;
+    text-align: left;
+}
+
+.about-content h1 {
+    font-size: 2.5rem;
+    margin-bottom: 2rem;
+    color: var(--text-color);
+}
+
+.about-body {
+    margin-bottom: 3rem;
+}
+
+.about-body h2 {
+    font-size: 1.8rem;
+    margin: 2.5rem 0 1.5rem;
+    color: var(--text-color);
+}
+
+.about-body p {
+    margin-bottom: 1.5rem;
+    line-height: 1.6;
+    color: var(--text-color);
+}
+
+.about-body ul {
+    margin: 1.5rem 0 2rem;
+    padding-left: 1.5rem;
+    list-style-type: disc;
+}
+
+.about-body li {
+    margin-bottom: 0.75rem;
+    line-height: 1.6;
+    color: var(--text-color);
+}
+
+.about-body a {
+    color: var(--primary-color);
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.about-body a:hover {
+    color: var(--secondary-color);
+    text-decoration: underline;
+}
+
+/* Add more spacing before the signup form */
+.signup-section-wrapper {
+    margin-top: 4rem;
+    padding-top: 3rem;
+    border-top: 1px solid #e2e8f0;
+}
+
+/* Form spacing */
+.convertkit-form {
+    margin-top: 4rem;
+    text-align: left;
+}
+
+.convertkit-form h3,
+.convertkit-form p {
+    text-align: left;
+}
+
+/* Override any center alignments */
+[class*="text-center"] {
+    text-align: left;
+}
+
+/* About Page Styles */
+.about-content {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.about-content p,
+.about-content ul,
+.about-content ol,
+.about-content h1,
+.about-content h2,
+.about-content h3 {
+    text-align: left;
+}
+
+/* Keep spacing between content and form */
+.convertkit-form {
+    margin-top: 4rem;
 } 
