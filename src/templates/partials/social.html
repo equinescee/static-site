@@ -1,0 +1,26 @@
+<div class="social-share">
+    <button class="share-button twitter" onclick="share('twitter')">
+        Share on Twitter
+    </button>
+    <button class="share-button facebook" onclick="share('facebook')">
+        Share on Facebook
+    </button>
+    <button class="share-button linkedin" onclick="share('linkedin')">
+        Share on LinkedIn
+    </button>
+</div>
+
+<script>
+function share(platform) {
+    const url = encodeURIComponent(window.location.href);
+    const title = encodeURIComponent(document.title);
+    
+    const shareUrls = {
+        twitter: `https://twitter.com/intent/tweet?url=${url}&text=${title}`,
+        facebook: `https://www.facebook.com/sharer/sharer.php?u=${url}`,
+        linkedin: `https://www.linkedin.com/shareArticle?mini=true&url=${url}&title=${title}`
+    };
+    
+    window.open(shareUrls[platform], '_blank');
+}
+</script> 
