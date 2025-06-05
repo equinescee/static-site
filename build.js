@@ -8,6 +8,14 @@ const partials = {};
 
 // Add this at the top with other constants
 const BASE_URL = '/static-site';
+const GITHUB_PAGES_URL = 'https://equinescee.github.io/static-site';
+
+// Helper function to process template variables
+function processTemplateVariables(content) {
+    return content
+        .replace(/\$\{BASE_URL\}/g, BASE_URL)
+        .replace(/href="\/static-site\//g, `href="${GITHUB_PAGES_URL}/`);
+}
 
 // Add this function to load partials
 async function loadPartials() {
@@ -47,7 +55,7 @@ const template = (metadata, content, relativePath = '.') => `
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>${metadata.title || 'Untitled'} - CompanyName</title>
     <meta name="description" content="${metadata.description || ''}">
-    <link rel="stylesheet" href="${BASE_URL}${relativePath}/css/style.css">
+    <link rel="stylesheet" href="${BASE_URL}/css/style.css">
 </head>
 <body>
     ${includePartial('header')}
@@ -99,8 +107,8 @@ async function processMarkdown(filePath) {
         // Replace all metadata variables
         const metadata = {
             ...data,
-            url: `${BASE_URL}/${path.relative('src/content', filePath).replace('.md', '.html')}`,
-            relativePath: BASE_URL + '/' + relativePath
+            url: `${BASE_URL}/blog/${path.basename(filePath).replace('.md', '.html')}`,
+            relativePath: BASE_URL
         };
         
         // First replace complex date and author template strings
@@ -126,7 +134,7 @@ async function processMarkdown(filePath) {
                 const value = key.split('.').reduce((obj, k) => obj && obj[k], metadata);
                 return value || '';
             })
-            .replace(/\$\{relativePath\}/g, relativePath)
+            .replace(/\$\{relativePath\}/g, BASE_URL)
             .replace(/\$\{content\}/g, html)
             .replace(/\$\{include\('([^']+)'\)}/g, (match, partialName) => {
                 return includePartial(partialName.replace('.html', ''), metadata);
@@ -150,7 +158,7 @@ async function processMarkdown(filePath) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>${metadata.title || 'Untitled'} - CompanyName</title>
     <meta name="description" content="${metadata.description || ''}">
-    <link rel="stylesheet" href="${BASE_URL}${relativePath}/css/style.css">
+    <link rel="stylesheet" href="${BASE_URL}/css/style.css">
 </head>
 <body>
     ${includePartial('header')}
@@ -206,24 +214,22 @@ async function processDirectory(dir) {
 
 // Copy static assets to dist
 async function copyStaticAssets() {
-    // Ensure dist directory exists
     await fs.ensureDir('dist');
     
-    // Copy CSS
+    if (await fs.pathExists('src/index.html')) {
+        let indexContent = await fs.readFile('src/index.html', 'utf-8');
+        indexContent = indexContent.replace(/\$\{BASE_URL\}/g, BASE_URL);
+        await fs.writeFile('dist/index.html', indexContent);
+    }
+    
     if (await fs.pathExists('src/css')) {
         await fs.ensureDir('dist/css');
         await fs.copy('src/css', 'dist/css');
     }
     
-    // Copy JS
     if (await fs.pathExists('src/js')) {
         await fs.ensureDir('dist/js');
-        await fs.copy('src/js', 'dist/js', { overwrite: true });
-    }
-    
-    // Copy index.html
-    if (await fs.pathExists('src/index.html')) {
-        await fs.copy('src/index.html', 'dist/index.html', { overwrite: true });
+        await fs.copy('src/js', 'dist/js');
     }
 }
 
@@ -256,11 +262,11 @@ async function generateBlogIndex() {
         if (file.endsWith('.md')) {
             const content = await fs.readFile(path.join(blogDir, file), 'utf-8');
             const { data } = matter(content);
-            const url = `${BASE_URL}/${file.replace('.md', '.html')}`;
             posts.push({
                 title: data.title,
                 date: data.date,
-                url: url
+                description: data.description,
+                url: `${BASE_URL}/blog/${file.replace('.md', '.html')}`
             });
         }
     }
