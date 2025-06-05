@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>${metadata.title} - CompanyName Blog</title>
-    <meta name="description" content="${metadata.description || ''}">
-    <link rel="stylesheet" href="${relativePath}/css/style.css">
+    <title>Blog - CompanyName</title>
+    <meta name="description" content="Latest blog posts and updates">
+    <link rel="stylesheet" href="../css/style.css">
 </head>
 <body>
     <header>
@@ -19,20 +19,13 @@
         </nav>
     </header>
 
-    <main class="blog-post">
-        <article>
-            <div class="post-header">
-                <h1>${metadata.title}</h1>
-                <div class="post-meta">
-                    ${metadata.date ? `<time datetime="${metadata.date}">${new Date(metadata.date).toLocaleDateString()}</time>` : ''}
-                    ${metadata.author ? `<span class="author">By ${metadata.author}</span>` : ''}
-                </div>
-                ${metadata.tags ? `<div class="tags">${metadata.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}</div>` : ''}
+    <main class="blog-index">
+        <div class="container">
+            <h1>Latest Posts</h1>
+            <div class="post-grid">
+                <!-- Blog posts will be inserted here -->
             </div>
-            <div class="post-content">
-                ${content}
-            </div>
-        </article>
+        </div>
     </main>
 
     <footer>

@@ -1,28 +1,24 @@
 ---
-title: My First Blog Post
-description: Welcome to my new blog where I share my thoughts and experiences
+title: Project Update - New Features
+description: Latest updates and features added to our project
 author: Your Name
-date: 2024-03-20
-tags: [welcome, first-post]
+date: 2024-03-21
+tags: [project, updates, features]
 ---
 
-# Welcome to My Blog
+# Project Update: New Features
 
-This is my first blog post on my new static site. I'm excited to share my thoughts and experiences with you.
+We've made several improvements to our project:
 
-## Why I Started This Blog
+## 1. Improved Navigation
+- Removed redundant Products link
+- Streamlined menu structure
+- Better mobile responsiveness
 
-I created this blog to:
-- Share my knowledge
-- Document my learning journey
-- Connect with like-minded people
+## 2. Blog System
+- Markdown support
+- Clean template design
+- Easy content management
 
-## What to Expect
-
-I'll be writing about:
-1. Web Development
-2. Technology trends
-3. Personal projects
-4. Tips and tutorials
-
-Stay tuned for more content! 
+## What's Next
+Stay tuned for more updates as we continue to improve the site! 

@@ -21,7 +21,6 @@ const template = (metadata, content, relativePath = '.') => `
                 <li><a href="${relativePath}/index.html">Home</a></li>
                 <li><a href="${relativePath}/blog/index.html">Blog</a></li>
                 <li><a href="${relativePath}/about.html">About</a></li>
-                <li><a href="${relativePath}/faq.html">FAQ</a></li>
             </ul>
         </nav>
     </header>
@@ -46,6 +45,9 @@ const template = (metadata, content, relativePath = '.') => `
 </html>
 `;
 
+// Add this at the top with other requires
+const blogTemplate = fs.readFileSync('src/templates/blog.html', 'utf-8');
+
 // Process a single markdown file
 async function processMarkdown(filePath) {
     const source = await fs.readFile(filePath, 'utf-8');
@@ -62,6 +64,21 @@ async function processMarkdown(filePath) {
     
     // Calculate relative path to root
     const relativePath = path.relative(path.dirname(filePath), 'src/content').replace(/^\.\.\//, '') || '.';
+    
+    // Use blog template for blog posts, default template for others
+    if (filePath.includes('blog/')) {
+        return blogTemplate
+            .replace('${metadata.title}', data.title || 'Untitled')
+            .replace('${metadata.description || \'\'}', data.description || '')
+            .replace('${relativePath}', relativePath)
+            .replace('${content}', html)
+            .replace('${metadata.date ? `<time datetime="${metadata.date}">${new Date(metadata.date).toLocaleDateString()}</time>` : \'\'}',
+                data.date ? `<time datetime="${data.date}">${new Date(data.date).toLocaleDateString()}</time>` : '')
+            .replace('${metadata.author ? `<span class="author">By ${metadata.author}</span>` : \'\'}',
+                data.author ? `<span class="author">By ${data.author}</span>` : '')
+            .replace('${metadata.tags ? `<div class="tags">${metadata.tags.map(tag => `<span class="tag">${tag}</span>`).join(\'\')}</div>` : \'\'}',
+                data.tags ? `<div class="tags">${data.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}</div>` : '');
+    }
     
     return template(data, html, relativePath);
 }
@@ -120,6 +137,59 @@ async function cleanDist() {
     }
 }
 
+// Add this function after processDirectory:
+async function generateBlogIndex() {
+    const template = await fs.readFile('src/templates/blog-index.html', 'utf-8');
+    const blogDir = 'src/content/blog';
+    const posts = [];
+    
+    // Get all blog posts
+    const files = await fs.readdir(blogDir);
+    for (const file of files) {
+        if (file.endsWith('.md')) {
+            const content = await fs.readFile(path.join(blogDir, file), 'utf-8');
+            const { data } = matter(content);
+            posts.push({
+                title: data.title,
+                date: data.date,
+                url: file.replace('.md', '.html')
+            });
+        }
+    }
+    
+    // Sort posts by date
+    posts.sort((a, b) => new Date(b.date) - new Date(a.date));
+    
+    // Generate HTML for each post
+    const postsHtml = posts.map(post => `
+        <article class="post-card">
+            <div class="post-card-content">
+                <h2 class="post-title">
+                    <a href="${post.url}">${post.title}</a>
+                </h2>
+                ${post.date ? `
+                    <div class="post-meta">
+                        <time datetime="${post.date}">${new Date(post.date).toLocaleDateString()}</time>
+                    </div>
+                ` : ''}
+                ${post.description ? `
+                    <p class="post-excerpt">${post.description}</p>
+                ` : ''}
+                <div class="post-link">
+                    <a href="${post.url}" class="read-more">Read More →</a>
+                </div>
+            </div>
+        </article>
+    `).join('\n');
+    
+    // Insert posts into template
+    const indexHtml = template.replace('<!-- Blog posts will be inserted here -->', postsHtml);
+    
+    // Ensure blog directory exists and write the file
+    await fs.ensureDir('dist/blog');
+    await fs.writeFile('dist/blog/index.html', indexHtml);
+}
+
 // Main build function
 async function build() {
     try {
@@ -137,6 +207,7 @@ async function build() {
 
         // Process all content
         await processDirectory('src/content');
+        await generateBlogIndex();
         
         // Copy static assets with overwrite
         await copyStaticAssets();
