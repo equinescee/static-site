@@ -3,8 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>About Us - CompanyName</title>
-    <link rel="stylesheet" href="css/style.css">
+    <title>${metadata.title ? `${metadata.title} - ` : ''}CompanyName</title>
+    <meta name="description" content="${metadata.description || ''}">
+    <link rel="stylesheet" href="${relativePath}/css/style.css">
+    ${metadata.head || ''}
 </head>
 <body>
     <header>
@@ -12,27 +14,14 @@
             <div class="logo">CompanyName</div>
             <div class="nav-links">
                 <a href="/">Home</a>
-                <a href="/#products">Products</a>
-                <a href="/about.html">About</a>
+                <a href="/about">About</a>
+                <a href="/blog">Blog</a>
             </div>
         </nav>
     </header>
 
     <main>
-        <section class="about-section">
-            <div class="about-content">
-                <h1>About Us</h1>
-                <p class="subtitle">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt.</p>
-                
-                <div class="about-details">
-                    <h2>Our Mission</h2>
-                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
-                    
-                    <h2>Our Vision</h2>
-                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
-                </div>
-            </div>
-        </section>
+        ${content}
     </main>
 
     <footer>

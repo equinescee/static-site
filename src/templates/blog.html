@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${metadata.title} - CompanyName Blog</title>
+    <meta name="description" content="${metadata.description || ''}">
+    <link rel="stylesheet" href="${relativePath}/css/style.css">
+</head>
+<body>
+    <header>
+        <nav class="navbar">
+            <div class="logo">CompanyName</div>
+            <div class="nav-links">
+                <a href="/">Home</a>
+                <a href="/#products">Products</a>
+                <a href="/about.html">About</a>
+                <a href="/blog">Blog</a>
+            </div>
+        </nav>
+    </header>
+
+    <main class="blog-post">
+        <article>
+            <div class="post-header">
+                <h1>${metadata.title}</h1>
+                <div class="post-meta">
+                    ${metadata.date ? `<time datetime="${metadata.date}">${new Date(metadata.date).toLocaleDateString()}</time>` : ''}
+                    ${metadata.author ? `<span class="author">By ${metadata.author}</span>` : ''}
+                </div>
+                ${metadata.tags ? `<div class="tags">${metadata.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}</div>` : ''}
+            </div>
+            <div class="post-content">
+                ${content}
+            </div>
+        </article>
+    </main>
+
+    <footer>
+        <div class="footer-content">
+            <div class="footer-section">
+                <h4>Contact Us</h4>
+                <p>contact@company.com</p>
+                <p>1-800-123-4567</p>
+            </div>
+            <div class="footer-section">
+                <h4>Follow Us</h4>
+                <div class="social-links">
+                    <a href="#">Twitter</a>
+                    <a href="#">LinkedIn</a>
+                    <a href="#">Facebook</a>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2024 CompanyName. All rights reserved.</p>
+        </div>
+    </footer>
+</body>
+</html> 
